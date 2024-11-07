@@ -1,0 +1,41 @@
+npx create-react-app restaurant-pos --template typescript
+cd restaurant-pos
+npm install @chakra-ui/react @emotion/react @emotion/styled framer-motion
+npm install @mui/material @emotion/react @emotion/styled
+npm start
+y
+cls
+npm install lucide-react
+npm start
+y
+cls
+npm install @radix-ui/react-scroll-area
+npm install @radix-ui/react-switch
+npm install @radix-ui/react-label
+npm install class-variance-authority
+npm install clsx tailwind-merge
+cls
+npm start
+y
+npm install tailwindcss
+npx tailwind init
+npm start
+y
+cls
+npx shadcn@latest add button
+cls
+npm install tailwindcss-animate class-variance-authority clsx tailwind-merge
+npm install lucide-react
+npx shadcn@latest add button
+npm install tailwindcss postcss autoprefixer
+npm install -g @shadcn/cli
+npm tailwind init -p
+npx tailwind init -p
+npm install next-themes
+npm install next-themes@latest
+npm install next
+cls
+npm run
+npm start
+y
+doskey /history > cmd_history.txt
