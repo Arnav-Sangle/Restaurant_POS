@@ -43,6 +43,7 @@ interface TableData {
 interface OrderHistory {
   id: number
   customerName: string
+  customerPhone: string
   tableNumber: number
   date: string
   time: string
@@ -73,6 +74,7 @@ class RestaurantPOSClass extends React.Component<{}, State> {
         {
           id: 12,
           customerName: 'Raj Singh',
+          customerPhone: '9876543210',
           tableNumber: 3,
           date: '11/10/24',
           time: '2:30 pm',
@@ -87,6 +89,7 @@ class RestaurantPOSClass extends React.Component<{}, State> {
         {
           id: 13,
           customerName: 'Sher Khan',
+          customerPhone: '1234567890',
           tableNumber: 1,
           date: '11/10/24',
           time: '1:23 pm',
@@ -192,6 +195,7 @@ class RestaurantPOSClass extends React.Component<{}, State> {
     const newOrder: OrderHistory = {
       id: this.state.orderHistory.length + 1,
       customerName: currentTable.customerName,
+      customerPhone: currentTable.customerPhone,
       tableNumber: this.state.selectedTable ?? 0,
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -217,6 +221,21 @@ class RestaurantPOSClass extends React.Component<{}, State> {
       tableData: newTableData,
       page: 'tables'
     })
+  }
+
+  sendBillViaSMS = () => {
+    const currentTable = this.getCurrentTableData();
+    const { total } = this.calculateTotal();
+    
+    if (!currentTable.customerPhone) {
+      alert("Customer phone number is not available.");
+      return;
+    }
+
+    // In a real application, you would integrate with an SMS API here.
+    // For this example, we'll just show an alert.
+    const message = `Your bill for Table ${this.state.selectedTable} is ₹${total.toFixed(2)}. Thank you for dining with us!`;
+    alert(`SMS sent to ${currentTable.customerPhone}: ${message}`);
   }
 
   renderHomePage = () => (
@@ -444,7 +463,7 @@ class RestaurantPOSClass extends React.Component<{}, State> {
               {currentTable.order.length > 0 ? 'Edit Order' : 'Place Order'}
             </Button>
             {currentTable.order.length > 0 && (
-              <Button variant="outline">
+              <Button variant="outline" onClick={this.sendBillViaSMS}>
                 Send Bill via SMS
               </Button>
             )}
@@ -647,6 +666,7 @@ class RestaurantPOSClass extends React.Component<{}, State> {
                 <div>
                   <h3 className="text-lg font-semibold">Customer Information</h3>
                   <p>Name: {selectedOrder.customerName}</p>
+                  <p>Phone: {selectedOrder.customerPhone || 'N/A'}</p>
                   <p>Table: {selectedOrder.tableNumber}</p>
                   <p>Date: {selectedOrder.date}</p>
                   <p>Time: {selectedOrder.time}</p>
