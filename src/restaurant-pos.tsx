@@ -47,18 +47,21 @@ interface OrderHistory {
   date: string
   time: string
   total: number
+  order: OrderItem[]
+  invoiceNumber: string
 }
 
 interface State {
-  page: 'home' | 'tables' | 'status' | 'menu' | 'history'
+  page: 'home' | 'tables' | 'status' | 'menu' | 'history' | 'viewDetails'
   selectedTable: number | null
   selectedCategory: string
   tableData: { [key: number]: TableData }
   orderHistory: OrderHistory[]
   editingCustomer: boolean
+  selectedOrder: OrderHistory | null
 }
 
-class RestaurantPOS extends React.Component<{}, State> {
+class RestaurantPOSClass extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props)
     this.state = {
@@ -67,19 +70,42 @@ class RestaurantPOS extends React.Component<{}, State> {
       selectedCategory: categories[0],
       tableData: {},
       orderHistory: [
-        { id: 12, customerName: 'Raj Singh', tableNumber: 3, date: '11/10/24', time: '2:30 pm', total: 760 },
-        { id: 13, customerName: 'Sher Khan', tableNumber: 1, date: '11/10/24', time: '1:23 pm', total: 160 },
-        { id: 14, customerName: 'Jyoti Lal', tableNumber: 4, date: '10/10/24', time: '10:30 pm', total: 540 },
-        { id: 15, customerName: 'Kashish Wani', tableNumber: 2, date: '10/10/24', time: '9:25 pm', total: 810 },
+        {
+          id: 12,
+          customerName: 'Raj Singh',
+          tableNumber: 3,
+          date: '11/10/24',
+          time: '2:30 pm',
+          total: 760,
+          order: [
+            { id: 1, name: 'Tandoori Chicken', price: 295, quantity: 2 },
+            { id: 2, name: 'Butter Naan', price: 40, quantity: 3 },
+            { id: 3, name: 'Cold Coffee', price: 150, quantity: 1 }
+          ],
+          invoiceNumber: 'INV20241110001'
+        },
+        {
+          id: 13,
+          customerName: 'Sher Khan',
+          tableNumber: 1,
+          date: '11/10/24',
+          time: '1:23 pm',
+          total: 160,
+          order: [
+            { id: 4, name: 'Tandoori Roti', price: 30, quantity: 2 },
+            { id: 6, name: 'Cold Coffee', price: 150, quantity: 1 }
+          ],
+          invoiceNumber: 'INV20241110002'
+        },
       ],
-      editingCustomer: false
+      editingCustomer: false,
+      selectedOrder: null
     }
   }
 
   getCurrentTableData = (): TableData => {
     const { selectedTable, tableData } = this.state
-    const validIndex = selectedTable ?? 0; // Use 0 or another default index
-    return tableData[validIndex] || {
+    return tableData[selectedTable ?? 0] || {
       customerName: '',
       customerPhone: '',
       isOccupied: false,
@@ -169,7 +195,9 @@ class RestaurantPOS extends React.Component<{}, State> {
       tableNumber: this.state.selectedTable ?? 0,
       date: date.toLocaleDateString(),
       time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      total
+      total,
+      order: currentTable.order,
+      invoiceNumber: `INV${date.getTime().toString().slice(-8)}`
     }
 
     this.setState(prevState => ({
@@ -287,7 +315,7 @@ class RestaurantPOS extends React.Component<{}, State> {
                     <Input
                       value={currentTable.customerName}
                       onChange={(e) => this.updateTableData({ customerName: e.target.value })}
-                      disabled={!this.state.editingCustomer && currentTable.customerName !== ''}
+                      disabled={this.state.editingCustomer}
                     />
                   </div>
                   <div>
@@ -295,18 +323,18 @@ class RestaurantPOS extends React.Component<{}, State> {
                     <Input
                       value={currentTable.customerPhone}
                       onChange={(e) => this.updateTableData({ customerPhone: e.target.value })}
-                      disabled={!this.state.editingCustomer && currentTable.customerPhone !== ''}
+                      disabled={this.state.editingCustomer}
                     />
                   </div>
                   <div className="flex justify-between">
                     <Button
                       variant="outline"
-                      onClick={() => this.setState({ editingCustomer: true })}
+                      onClick={() => this.setState({ editingCustomer: false })}
                     >
                       Edit Details
                     </Button>
                     <Button
-                      onClick={() => this.setState({ editingCustomer: false })}
+                      onClick={() => this.setState({ editingCustomer: true })}
                     >
                       Confirm Details
                     </Button>
@@ -576,7 +604,11 @@ class RestaurantPOS extends React.Component<{}, State> {
                     <td>{order.time}</td>
                     <td>₹{order.total}</td>
                     <td>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => this.setState({ page: 'viewDetails', selectedOrder: order })}
+                      >
                         View Details
                       </Button>
                     </td>
@@ -590,6 +622,73 @@ class RestaurantPOS extends React.Component<{}, State> {
     </div>
   )
 
+  renderViewDetailsPage = () => {
+    const { selectedOrder } = this.state
+    if (!selectedOrder) return null
+
+    return (
+      <div className="container mx-auto p-4">
+        <Card className="border-2">
+          <CardHeader className="flex flex-row items-center">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => this.setState({ page: 'history', selectedOrder: null })}
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <CardTitle className="flex-1 text-center text-2xl font-normal">
+              Order Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[500px] pr-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Customer Information</h3>
+                  <p>Name: {selectedOrder.customerName}</p>
+                  <p>Table: {selectedOrder.tableNumber}</p>
+                  <p>Date: {selectedOrder.date}</p>
+                  <p>Time: {selectedOrder.time}</p>
+                  <p>Invoice Number: {selectedOrder.invoiceNumber}</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Order Items</h3>
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left border-b">
+                        <th className="pb-2">Item</th>
+                        <th className="pb-2">Quantity</th>
+                        <th className="pb-2">Price</th>
+                        <th className="pb-2">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.order.map((item) => (
+                        <tr key={item.id} className="border-b">
+                          <td className="py-2">{item.name}</td>
+                          <td>{item.quantity}</td>
+                          <td>₹{item.price}</td>
+                          <td>₹{item.price * item.quantity}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Bill Summary</h3>
+                  <p>Subtotal: ₹{selectedOrder.total}</p>
+                  <p>GST (5%): ₹{(selectedOrder.total * 0.05).toFixed(2)}</p>
+                  <p className="font-bold">Total: ₹{(selectedOrder.total * 1.05).toFixed(2)}</p>
+                </div>
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   render() {
     switch (this.state.page) {
       case 'home':
@@ -602,12 +701,14 @@ class RestaurantPOS extends React.Component<{}, State> {
         return this.renderMenuPage()
       case 'history':
         return this.renderHistoryPage()
+      case 'viewDetails':
+        return this.renderViewDetailsPage()
       default:
         return null
     }
   }
 }
 
-export default function App() {
-  return <RestaurantPOS />
+export default function RestaurantPOS() {
+  return <RestaurantPOSClass />
 }
